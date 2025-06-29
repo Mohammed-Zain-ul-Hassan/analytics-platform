@@ -11,8 +11,11 @@ export async function GET(request: NextRequest) {
 
   try {
     // Fetch tenant from Payload CMS
+    const apiUrl =
+      process.env.NEXT_PUBLIC_API_URL ||
+      "https://admin.analytics.fintyhive.com";
     const response = await fetch(
-      `http://localhost:3001/api/tenants?where[slug][equals]=${tenantSlug}&limit=1`,
+      `${apiUrl}/api/tenants?where[slug][equals]=${tenantSlug}&limit=1`,
       {
         headers: {
           "Content-Type": "application/json",
