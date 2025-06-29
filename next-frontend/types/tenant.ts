@@ -26,6 +26,13 @@ export interface Tenant {
   logo: string;
   domain: string;
   theme: TenantTheme;
+  slug?: string;
+  umamiWebsiteId?: string | null;
+  settings?: {
+    brandColor: string;
+    [key: string]: any; // Allow for future settings
+  };
+  status?: string;
 }
 
 export interface MetricData {
@@ -70,4 +77,19 @@ export interface ColorPreset {
   primary: string;
   secondary: string;
   accent: string;
+}
+
+export interface PayloadTenantResponse {
+  id: string;
+  name: string;
+  slug: string;
+  domain: string;
+  umamiWebsiteId: string | null;
+  theme: {
+    primary: string;
+  };
+  settings: {
+    brandColor: string;
+  };
+  status: string;
 }

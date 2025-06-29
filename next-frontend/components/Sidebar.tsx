@@ -13,10 +13,49 @@ const iconMap = {
 };
 
 const Sidebar: React.FC = () => {
-  const { currentTenant, availableTenants, switchTenant, isDarkMode } =
-    useTenant();
-  const theme = isDarkMode ? currentTenant.theme.dark : currentTenant.theme;
+  const { currentTenant, isDarkMode, loading, error } = useTenant();
   const pathname = usePathname();
+
+  // Handle loading state
+  if (loading) {
+    return (
+      <div className="w-64 border-r bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center p-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            Loading...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle error state
+  if (error) {
+    return (
+      <div className="w-64 border-r bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center p-4">
+          <p className="text-sm text-red-600">Error loading tenant</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle null tenant
+  if (!currentTenant) {
+    return (
+      <div className="w-64 border-r bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center p-4">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            No tenant found
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Now safe to use currentTenant
+  const theme = isDarkMode ? currentTenant.theme.dark : currentTenant.theme;
 
   const navigationItems = [
     { icon: Home, label: "Dashboard", href: "/" },
@@ -43,55 +82,43 @@ const Sidebar: React.FC = () => {
           }}
         />
         <div className="relative">
-          <div className="flex items-center space-x-3 mb-4">
+          <div className="flex items-center space-x-3">
             <div
-              className="p-2.5 rounded-lg"
+              className="p-3 rounded-xl"
               style={{ backgroundColor: `${currentTenant.theme.primary}15` }}
             >
               {React.createElement(
                 iconMap[currentTenant.logo as keyof typeof iconMap] ||
                   Building2,
                 {
-                  className: "w-6 h-6",
+                  className: "w-7 h-7",
                   style: { color: currentTenant.theme.primary },
                 }
               )}
             </div>
-            <div>
-              <h2
-                className="font-semibold text-lg"
-                style={{ color: theme.text }}
-              >
+            <div className="flex-1">
+              <h2 className="font-bold text-xl" style={{ color: theme.text }}>
                 {currentTenant.name}
               </h2>
-              <p className="text-xs" style={{ color: theme.textSecondary }}>
+              <p
+                className="text-xs mt-1"
+                style={{ color: theme.textSecondary }}
+              >
                 {currentTenant.domain}
               </p>
+              <div className="mt-2">
+                <span
+                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                  style={{
+                    backgroundColor: `${currentTenant.theme.success}15`,
+                    color: currentTenant.theme.success,
+                  }}
+                >
+                  ● Active
+                </span>
+              </div>
             </div>
           </div>
-
-          {/* Tenant switcher */}
-          <select
-            value={currentTenant.id}
-            onChange={(e) => {
-              const tenant = availableTenants.find(
-                (t) => t.id === e.target.value
-              );
-              if (tenant) switchTenant(tenant);
-            }}
-            className="w-full p-2.5 rounded-lg border transition-all duration-200 text-xs font-medium"
-            style={{
-              backgroundColor: theme.background,
-              borderColor: currentTenant.theme.border,
-              color: theme.text,
-            }}
-          >
-            {availableTenants.map((tenant) => (
-              <option key={tenant.id} value={tenant.id}>
-                Switch to {tenant.name}
-              </option>
-            ))}
-          </select>
         </div>
       </div>
 
@@ -151,10 +178,10 @@ const Sidebar: React.FC = () => {
       >
         <div className="flex items-center space-x-3 p-3 rounded-lg hover:bg-opacity-5 transition-all duration-200 cursor-pointer group">
           <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-semibold text-sm"
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-sm"
             style={{ backgroundColor: currentTenant.theme.primary }}
           >
-            A
+            {currentTenant.name.charAt(0).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
             <p

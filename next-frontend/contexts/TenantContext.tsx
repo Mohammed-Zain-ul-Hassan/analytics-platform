@@ -10,7 +10,9 @@ import React, {
 import { Tenant, TenantTheme, ColorPreset } from "../types/tenant";
 
 interface TenantContextType {
-  currentTenant: Tenant;
+  currentTenant: Tenant | null;
+  loading: boolean;
+  error: string | null;
   switchTenant: (tenant: Tenant) => void;
   availableTenants: Tenant[];
   isDarkMode: boolean;
@@ -93,6 +95,7 @@ const tenantThemes: Record<string, TenantTheme> = {
   },
 };
 
+// Fallback tenant for when no subdomain is detected
 const defaultTenants: Tenant[] = [
   {
     id: "acme-corp",
@@ -144,12 +147,64 @@ export const colorPresets: ColorPreset[] = [
 export const TenantProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const [currentTenant, setCurrentTenant] = useState<Tenant>(defaultTenants[0]);
+  const [currentTenant, setCurrentTenant] = useState<Tenant | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [timeframe, setTimeframe] = useState("7d");
   const [currentView, setCurrentView] = useState<"dashboard" | "settings">(
     "dashboard"
   );
+
+  // Fetch real tenant data on mount
+  useEffect(() => {
+    async function fetchTenant() {
+      try {
+        console.log("🔍 Fetching tenant data...");
+        const response = await fetch("/api/tenant");
+
+        if (response.ok) {
+          const tenantData = await response.json();
+          console.log("✅ Tenant data received:", tenantData);
+
+          // Convert API response to full Tenant object with theme
+          const fullTenant: Tenant = {
+            id: tenantData.slug,
+            name: tenantData.name,
+            logo: "Building2", // Default logo, can be enhanced later
+            domain:
+              tenantData.domain || `${tenantData.slug}.analytics.fintyhive.com`,
+            theme: {
+              ...tenantThemes.modern, // Use modern theme as base
+              primary:
+                tenantData.settings?.brandColor || tenantThemes.modern.primary,
+            },
+            umamiWebsiteId: tenantData.umamiWebsiteId,
+            settings: tenantData.settings,
+            status: tenantData.status,
+          };
+
+          setCurrentTenant(fullTenant);
+        } else if (response.status === 404) {
+          console.log("📄 No tenant found, using default");
+          setCurrentTenant(defaultTenants[0]); // Fallback to default
+        } else if (response.status === 400) {
+          console.log("🏠 No subdomain detected, using default");
+          setCurrentTenant(defaultTenants[0]); // No subdomain = main page
+        } else {
+          setError("Failed to load tenant");
+        }
+      } catch (err) {
+        console.error("❌ Tenant fetch error:", err);
+        setError("Network error");
+        setCurrentTenant(defaultTenants[0]); // Fallback on error
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchTenant();
+  }, []);
 
   // Check system preference for dark mode
   useEffect(() => {
@@ -174,6 +229,8 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({
     secondary: string;
     accent: string;
   }) => {
+    if (!currentTenant) return;
+
     const updatedTenant = {
       ...currentTenant,
       theme: {
@@ -187,14 +244,9 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const resetTenantColors = () => {
-    const originalTheme =
-      tenantThemes[
-        currentTenant.id === "acme-corp"
-          ? "modern"
-          : currentTenant.id === "tech-startup"
-          ? "robinhood"
-          : "notion"
-      ];
+    if (!currentTenant) return;
+
+    const originalTheme = tenantThemes.modern; // Default to modern theme
     const updatedTenant = {
       ...currentTenant,
       theme: originalTheme,
@@ -206,6 +258,8 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({
     <TenantContext.Provider
       value={{
         currentTenant,
+        loading,
+        error,
         switchTenant,
         availableTenants: defaultTenants,
         isDarkMode,

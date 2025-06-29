@@ -1,4 +1,4 @@
-import { CollectionConfig } from 'payload';
+import { CollectionConfig } from 'payload'
 
 const Tenants: CollectionConfig = {
   slug: 'tenants',
@@ -34,7 +34,7 @@ const Tenants: CollectionConfig = {
       type: 'text',
       label: 'Umami Website ID',
       admin: {
-        readOnly: true,
+        //readOnly: true,
         description: 'Auto-generated when tenant is created',
       },
     },
@@ -70,6 +70,6 @@ const Tenants: CollectionConfig = {
       defaultValue: 'active',
     },
   ],
-};
+}
 
-export default Tenants;
+export default Tenants

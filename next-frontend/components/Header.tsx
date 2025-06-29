@@ -6,10 +6,55 @@ import { useTenant } from "../contexts/TenantContext";
 import { usePathname } from "next/navigation";
 
 const Header: React.FC = () => {
-  const { currentTenant, isDarkMode, toggleDarkMode, timeframe, setTimeframe } =
-    useTenant();
-  const theme = isDarkMode ? currentTenant.theme.dark : currentTenant.theme;
+  const {
+    currentTenant,
+    isDarkMode,
+    toggleDarkMode,
+    timeframe,
+    setTimeframe,
+    loading,
+    error,
+  } = useTenant();
   const pathname = usePathname();
+
+  // Handle loading state
+  if (loading) {
+    return (
+      <header className="border-b px-6 py-4 bg-gray-50 dark:bg-gray-900">
+        <div className="flex items-center justify-between">
+          <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-48 animate-pulse"></div>
+          <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-32 animate-pulse"></div>
+        </div>
+      </header>
+    );
+  }
+
+  // Handle error state
+  if (error) {
+    return (
+      <header className="border-b px-6 py-4 bg-gray-50 dark:bg-gray-900">
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-red-600">Error loading tenant</div>
+        </div>
+      </header>
+    );
+  }
+
+  // Handle null tenant
+  if (!currentTenant) {
+    return (
+      <header className="border-b px-6 py-4 bg-gray-50 dark:bg-gray-900">
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            No tenant found
+          </div>
+        </div>
+      </header>
+    );
+  }
+
+  // Now safe to use currentTenant
+  const theme = isDarkMode ? currentTenant.theme.dark : currentTenant.theme;
 
   const timeframes = [
     { value: "7d", label: "Last 7 days" },
@@ -63,7 +108,6 @@ const Header: React.FC = () => {
                 backgroundColor: theme.background,
                 borderColor: currentTenant.theme.border,
                 color: theme.text,
-                focusRingColor: currentTenant.theme.primary,
               }}
             >
               {timeframes.map((tf) => (
@@ -149,7 +193,7 @@ const Header: React.FC = () => {
             className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-semibold text-sm transition-transform duration-200 group-hover:scale-105"
             style={{ backgroundColor: currentTenant.theme.primary }}
           >
-            A
+            {currentTenant.name.charAt(0).toUpperCase()}
           </div>
           <ChevronDown
             className="w-3 h-3 transition-transform duration-200 group-hover:rotate-180"

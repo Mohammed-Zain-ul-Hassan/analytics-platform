@@ -112,7 +112,51 @@ const umamiCharts: ChartData[] = [
 ];
 
 const Dashboard: React.FC = () => {
-  const { currentTenant, isDarkMode } = useTenant();
+  const { currentTenant, loading, error, isDarkMode } = useTenant();
+
+  // Handle loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">
+            Loading tenant...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle error state
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
+          <p className="text-gray-600 dark:text-gray-400">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle null tenant
+  if (!currentTenant) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4">
+            Tenant Not Found
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            This subdomain is not configured.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Now safe to use currentTenant
   const theme = isDarkMode ? currentTenant.theme.dark : currentTenant.theme;
 
   return (
@@ -141,6 +185,16 @@ const Dashboard: React.FC = () => {
             visitors online now
           </span>
         </div>
+      </div>
+
+      {/* Tenant Info Header */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold" style={{ color: theme.text }}>
+          Welcome to {currentTenant.name}
+        </h1>
+        <p className="text-sm mt-1" style={{ color: theme.textSecondary }}>
+          Analytics Dashboard • {currentTenant.domain}
+        </p>
       </div>
 
       {/* Primary Metrics */}
@@ -194,7 +248,7 @@ const Dashboard: React.FC = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
               { label: "Export Data", color: currentTenant.theme.primary },
-              { label: "Custom Events", color: currentTenant.theme.secondary },
+              { label: "Secondary", color: currentTenant.theme.secondary },
               { label: "UTM Tracking", color: currentTenant.theme.accent },
               { label: "Goal Funnels", color: currentTenant.theme.success },
             ].map((action, index) => (
