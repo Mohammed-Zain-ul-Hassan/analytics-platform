@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Eye, Users, MousePointer, MapPin, Globe } from "lucide-react";
+import { Eye, Users, Globe } from "lucide-react";
 import { useTenant } from "../contexts/TenantContext";
 import { RealTimeActivity as RealTimeActivityType } from "../types/tenant";
 
@@ -63,10 +63,9 @@ const RealTimeActivity: React.FC = () => {
   const { currentTenant, isDarkMode } = useTenant();
   const [activities, setActivities] = useState(mockActivities);
   const [liveCount, setLiveCount] = useState(247);
-  const theme = isDarkMode ? currentTenant.theme.dark : currentTenant.theme;
 
-  // Simulate real-time updates
   useEffect(() => {
+    if (!currentTenant) return;
     const interval = setInterval(() => {
       const pages = [
         "/",
@@ -103,7 +102,19 @@ const RealTimeActivity: React.FC = () => {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [currentTenant]);
+
+  if (!currentTenant) {
+    return (
+      <div className="rounded-xl border p-6">
+        <div className="text-center text-gray-500">
+          <p>No tenant data available</p>
+        </div>
+      </div>
+    );
+  }
+
+  const theme = isDarkMode ? currentTenant.theme.dark : currentTenant.theme;
 
   const getActivityIcon = (type: string) => {
     switch (type) {

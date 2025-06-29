@@ -18,6 +18,18 @@ const umamiTopPages: TopPage[] = [
 const TopPages: React.FC = () => {
   const { currentTenant, isDarkMode } = useTenant();
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  // Handle null tenant
+  if (!currentTenant) {
+    return (
+      <div className="rounded-xl border p-6">
+        <div className="text-center text-gray-500">
+          <p>No tenant data available</p>
+        </div>
+      </div>
+    );
+  }
+
   const theme = isDarkMode ? currentTenant.theme.dark : currentTenant.theme;
 
   return (

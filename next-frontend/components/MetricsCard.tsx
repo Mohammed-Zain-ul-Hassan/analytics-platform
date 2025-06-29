@@ -29,17 +29,16 @@ const MetricsCard: React.FC<MetricsCardProps> = ({ metric, index }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [animatedValue, setAnimatedValue] = useState(0);
 
-  const theme = isDarkMode ? currentTenant.theme.dark : currentTenant.theme;
-
   useEffect(() => {
+    if (!currentTenant) return;
     const timer = setTimeout(() => {
       setIsVisible(true);
     }, index * 100);
-
     return () => clearTimeout(timer);
-  }, [index]);
+  }, [index, currentTenant]);
 
   useEffect(() => {
+    if (!currentTenant) return;
     if (isVisible) {
       // Handle different value formats (numbers, time duration)
       let numericValue = 0;
@@ -70,7 +69,19 @@ const MetricsCard: React.FC<MetricsCardProps> = ({ metric, index }) => {
 
       return () => clearInterval(timer);
     }
-  }, [isVisible, metric.value]);
+  }, [isVisible, metric.value, currentTenant]);
+
+  if (!currentTenant) {
+    return (
+      <div className="rounded-xl border p-5">
+        <div className="text-center text-gray-500">
+          <p>No tenant data available</p>
+        </div>
+      </div>
+    );
+  }
+
+  const theme = isDarkMode ? currentTenant.theme.dark : currentTenant.theme;
 
   const formatValue = (value: number) => {
     if (metric.value.includes("m") && metric.value.includes("s")) {

@@ -9,11 +9,21 @@ const Settings: React.FC = () => {
   const { currentTenant, isDarkMode, updateTenantColors, resetTenantColors } =
     useTenant();
   const [selectedColors, setSelectedColors] = useState({
-    primary: currentTenant.theme.primary,
-    secondary: currentTenant.theme.secondary,
-    accent: currentTenant.theme.accent,
+    primary: currentTenant?.theme.primary || "#3B82F6",
+    secondary: currentTenant?.theme.secondary || "#8B5CF6",
+    accent: currentTenant?.theme.accent || "#06B6D4",
   });
   const [showPreview, setShowPreview] = useState(false);
+
+  if (!currentTenant) {
+    return (
+      <div className="rounded-xl border p-10">
+        <div className="text-center text-gray-500">
+          <p>No tenant data available</p>
+        </div>
+      </div>
+    );
+  }
 
   const theme = isDarkMode ? currentTenant.theme.dark : currentTenant.theme;
 

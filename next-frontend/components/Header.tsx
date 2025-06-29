@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Search, Moon, Sun, Globe, ChevronDown, Bell } from "lucide-react";
+import { Search, Moon, Sun, ChevronDown, Bell } from "lucide-react";
 import { useTenant } from "../contexts/TenantContext";
 import { usePathname } from "next/navigation";
 

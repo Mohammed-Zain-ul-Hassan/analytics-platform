@@ -19,15 +19,25 @@ const Chart: React.FC<ChartProps> = ({
   const [isVisible, setIsVisible] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
-  const theme = isDarkMode ? currentTenant.theme.dark : currentTenant.theme;
-
   useEffect(() => {
+    if (!currentTenant) return;
     const timer = setTimeout(() => {
       setIsVisible(true);
     }, 200);
-
     return () => clearTimeout(timer);
-  }, []);
+  }, [currentTenant]);
+
+  if (!currentTenant) {
+    return (
+      <div className={`rounded-xl border p-6 ${className}`}>
+        <div className="text-center text-gray-500">
+          <p>No tenant data available</p>
+        </div>
+      </div>
+    );
+  }
+
+  const theme = isDarkMode ? currentTenant.theme.dark : currentTenant.theme;
 
   const maxValue = Math.max(...data.data.map((d) => d.value));
 
