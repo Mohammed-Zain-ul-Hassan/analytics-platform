@@ -73,27 +73,36 @@ const Tenants: CollectionConfig = {
   ],
   hooks: {
     afterChange: [
-      async ({ doc, operation, req }) => {
-        if (operation === 'create') {
-          console.log('New tenant created, setting up Umami website...')
+      async ({ doc, operation, req, context }) => {
+        // Prevent infinite loops
+        if (context.skipUmamiHook || operation !== 'create') {
+          return
+        }
 
-          const umamiResult = await createUmamiWebsite(doc)
+        console.log('New tenant created, setting up Umami website...')
 
-          if (umamiResult.success) {
-            console.log('Umami website created successfully!')
+        const umamiResult = await createUmamiWebsite(doc)
 
-            await req.payload.update({
-              collection: 'tenants',
-              id: doc.id,
-              data: {
-                umamiWebsiteId: umamiResult.websiteId,
-              },
-            })
+        if (umamiResult.success) {
+          console.log('Umami website created successfully!')
 
-            console.log('Tenant updated with Umami website ID:', umamiResult.websiteId)
-          } else {
-            console.error('Failed to create Umami website:', umamiResult.error)
-          }
+          // Pass req to use the same database transaction
+          await req.payload.update({
+            collection: 'tenants',
+            id: doc.id,
+            data: {
+              umamiWebsiteId: umamiResult.websiteId,
+            },
+            req, // ← This is the missing piece!
+            context: {
+              ...context,
+              skipUmamiHook: true, // Prevent infinite loop
+            },
+          })
+
+          console.log('Tenant updated with Umami website ID:', umamiResult.websiteId)
+        } else {
+          console.error('Failed to create Umami website:', umamiResult.error)
         }
       },
     ],
