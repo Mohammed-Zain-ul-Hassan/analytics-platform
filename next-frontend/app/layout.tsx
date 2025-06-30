@@ -1,8 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { TenantProvider } from "../contexts/TenantContext";
-import Sidebar from "../components/Sidebar";
-import Header from "../components/Header";
+import AppShell from "../components/AppShell";
 
 export const metadata: Metadata = {
   title: "Analytics Dashboard",
@@ -18,13 +17,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <TenantProvider>
-          <div className="flex h-screen overflow-hidden">
-            <Sidebar />
-            <div className="flex-1 flex flex-col overflow-hidden">
-              <Header />
-              <main className="flex-1 overflow-auto">{children}</main>
-            </div>
-          </div>
+          <AppShell>{children}</AppShell>
         </TenantProvider>
       </body>
     </html>

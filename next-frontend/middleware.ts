@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as jwt from "jsonwebtoken";
 
 // List of domains that should not be treated as tenants
 const EXCLUDED_SUBDOMAINS = ["www", "admin", "api", "mail", "ftp"];
@@ -18,22 +19,69 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // If no subdomain or excluded subdomain, continue without tenant header
-  if (!subdomain || EXCLUDED_SUBDOMAINS.includes(subdomain)) {
-    console.log("📄 No tenant context");
+  // Skip auth check for API routes
+  if (pathname.startsWith("/api/")) {
+    console.log("🔗 API route - skipping auth");
     return NextResponse.next();
   }
 
-  // Add tenant context to headers (including for API routes!)
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-tenant-slug", subdomain);
-  console.log("✅ Added tenant header:", subdomain);
+  // If no subdomain or excluded subdomain, continue without tenant header (root domain)
+  if (!subdomain || EXCLUDED_SUBDOMAINS.includes(subdomain)) {
+    console.log("📄 No tenant context - showing login page");
+    return NextResponse.next();
+  }
 
-  return NextResponse.next({
-    request: {
-      headers: requestHeaders,
-    },
-  });
+  // 🔐 AUTHENTICATION CHECK FOR SUBDOMAINS
+  console.log("🔐 Checking authentication for subdomain:", subdomain);
+
+  const token = request.cookies.get("auth-token")?.value;
+
+  if (!token) {
+    console.log("❌ No auth token - redirecting to login");
+    // No token - redirect to root domain (login page)
+    const loginUrl = new URL("/", request.url);
+    loginUrl.hostname = hostname.replace(`${subdomain}.`, ""); // Remove subdomain
+    return NextResponse.redirect(loginUrl);
+  }
+
+  try {
+    // Verify JWT token
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || "fallback-secret-key"
+    ) as any;
+    console.log("✅ Token valid for tenant:", decoded.tenantSlug);
+
+    // Check if token's tenant matches the subdomain
+    if (decoded.tenantSlug !== subdomain) {
+      console.log("❌ Token tenant mismatch - redirecting to login");
+      // Token doesn't match subdomain - redirect to login
+      const loginUrl = new URL("/", request.url);
+      loginUrl.hostname = hostname.replace(`${subdomain}.`, ""); // Remove subdomain
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // ✅ VALID AUTHENTICATION - Add tenant context to headers
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set("x-tenant-slug", subdomain);
+    requestHeaders.set("x-tenant-id", decoded.tenantId);
+    requestHeaders.set("x-tenant-name", decoded.tenantName);
+    requestHeaders.set("x-website-id", decoded.websiteId);
+
+    console.log("✅ Authenticated tenant access:", subdomain);
+
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
+  } catch (error) {
+    console.log("❌ JWT verification failed - redirecting to login");
+    // Invalid token - redirect to login
+    const loginUrl = new URL("/", request.url);
+    loginUrl.hostname = hostname.replace(`${subdomain}.`, ""); // Remove subdomain
+    return NextResponse.redirect(loginUrl);
+  }
 }
 
 function extractSubdomain(hostname: string): string | null {
