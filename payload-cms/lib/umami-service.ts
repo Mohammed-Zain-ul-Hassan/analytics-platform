@@ -11,6 +11,7 @@ interface UmamiWebsiteResponse {
   websiteId?: string
   data?: any
   error?: string
+  wasExisting?: boolean
 }
 
 export async function createUmamiWebsite(tenantData: Tenant): Promise<UmamiWebsiteResponse> {
@@ -38,7 +39,35 @@ export async function createUmamiWebsite(tenantData: Tenant): Promise<UmamiWebsi
 
     console.log('Got Umami auth token successfully')
 
-    // Step 2: Create website in Umami
+    // Step 2: Check if website already exists
+    const existingWebsitesResponse = await fetch(`${UMAMI_API_URL}/api/websites`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (existingWebsitesResponse.ok) {
+      const existingWebsites = await existingWebsitesResponse.json()
+      const domainToCheck = `${tenantData.slug}.analytics.fintyhive.com`
+
+      const existingWebsite = existingWebsites.data?.find(
+        (site: any) => site.domain === domainToCheck || site.name === tenantData.name,
+      )
+
+      if (existingWebsite) {
+        console.log('Website already exists, returning existing:', existingWebsite)
+        return {
+          success: true,
+          websiteId: existingWebsite.id,
+          data: existingWebsite,
+          wasExisting: true,
+        }
+      }
+    }
+
+    // Step 3: Create website in Umami
     const websiteResponse = await fetch(`${UMAMI_API_URL}/api/websites`, {
       method: 'POST',
       headers: {
