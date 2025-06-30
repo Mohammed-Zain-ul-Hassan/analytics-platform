@@ -1,4 +1,5 @@
 import { CollectionConfig } from 'payload'
+import { createUmamiWebsite } from '../../lib/umami-service'
 
 const Tenants: CollectionConfig = {
   slug: 'tenants',
@@ -70,6 +71,33 @@ const Tenants: CollectionConfig = {
       defaultValue: 'active',
     },
   ],
+  hooks: {
+    afterChange: [
+      async ({ doc, operation, req }) => {
+        if (operation === 'create') {
+          console.log('New tenant created, setting up Umami website...')
+
+          const umamiResult = await createUmamiWebsite(doc)
+
+          if (umamiResult.success) {
+            console.log('Umami website created successfully!')
+
+            await req.payload.update({
+              collection: 'tenants',
+              id: doc.id,
+              data: {
+                umamiWebsiteId: umamiResult.websiteId,
+              },
+            })
+
+            console.log('Tenant updated with Umami website ID:', umamiResult.websiteId)
+          } else {
+            console.error('Failed to create Umami website:', umamiResult.error)
+          }
+        }
+      },
+    ],
+  },
 }
 
 export default Tenants
