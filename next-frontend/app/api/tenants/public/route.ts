@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Fetch tenants from Payload CMS (NO AUTH HEADER)
     const apiUrl =
@@ -19,11 +19,13 @@ export async function GET(request: NextRequest) {
     const data = await response.json();
 
     // Return only public tenant information (no sensitive data)
-    const publicTenants = data.docs.map((tenant: any) => ({
-      id: tenant.id,
-      name: tenant.name,
-      slug: tenant.slug,
-    }));
+    const publicTenants = data.docs.map(
+      (tenant: { id: string; name: string; slug: string }) => ({
+        id: tenant.id,
+        name: tenant.name,
+        slug: tenant.slug,
+      })
+    );
 
     return NextResponse.json({
       tenants: publicTenants,

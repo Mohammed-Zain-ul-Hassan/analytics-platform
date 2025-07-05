@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 
 const LoginForm: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -10,7 +9,6 @@ const LoginForm: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const router = useRouter();
 
   const handleSubmit = async () => {
     if (!formData.tenantSlug || !formData.password) return;
@@ -35,7 +33,7 @@ const LoginForm: React.FC = () => {
       } else {
         setError(data.error || "Invalid credentials");
       }
-    } catch (err) {
+    } catch {
       setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
@@ -180,7 +178,7 @@ const LoginForm: React.FC = () => {
           {/* Help Text */}
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <button
                 onClick={() => (window.location.href = "/register")}
                 className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors duration-200"

@@ -82,7 +82,7 @@ const RegisterForm: React.FC = () => {
       } else {
         setError(data.error || "Registration failed");
       }
-    } catch (err) {
+    } catch {
       setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
@@ -132,8 +132,9 @@ const RegisterForm: React.FC = () => {
               Request Submitted!
             </h2>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Your analytics platform request has been sent to our team. We'll
-              review your application and get back to you within 24 hours.
+              Your analytics platform request has been sent to our team.
+              We&apos;ll review your application and get back to you within 24
+              hours.
             </p>
             <button
               onClick={() => (window.location.href = "/")}

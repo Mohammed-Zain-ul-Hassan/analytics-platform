@@ -8,7 +8,7 @@ import Dashboard from "@/components/Dashboard";
 export default function Home() {
   const [isRootDomain, setIsRootDomain] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const { currentTenant, loading, error } = useTenant();
+  const { loading } = useTenant();
 
   useEffect(() => {
     // Check if we're on the root domain

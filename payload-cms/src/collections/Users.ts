@@ -111,7 +111,7 @@ const Users: CollectionConfig = {
         condition: (data) => data?.role === 'user',
         description: 'Required for regular users. Not applicable for administrators.',
       },
-      validate: (value, { data }) => {
+      validate: (value: unknown, { data }: { data: any }) => {
         // Require tenant only for regular users
         if (data?.role === 'user' && !value) {
           return 'Organization is required for regular users'
