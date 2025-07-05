@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
       firstName,
       lastName,
       email,
-      tenant: createdTenant.id,
+      tenant: createdTenant.doc.id,
       status: "pending", // Will be approved by admin
       message: message || "",
       role: "user", // Default to regular user for frontend registration
@@ -177,7 +177,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: "Registration request created successfully",
-      tenantId: createdTenant.id,
+      tenantId: createdTenant.doc.id,
       userId: createdUser.id,
     });
   } catch (error) {
