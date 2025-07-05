@@ -116,13 +116,58 @@ export interface UserAuthOperations {
   };
 }
 /**
+ * Manage platform users and administrators
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
   id: number;
+  /**
+   * Required for all users
+   */
+  firstName: string;
+  /**
+   * Required for all users
+   */
+  lastName: string;
+  /**
+   * Select user type - this affects which fields are required
+   */
+  role: 'admin' | 'user';
+  /**
+   * Required for regular users. Not applicable for administrators.
+   */
+  tenant?: (number | null) | Tenant;
+  /**
+   * Change approval status. Users start as pending automatically.
+   */
+  status?: ('pending' | 'approved' | 'rejected') | null;
+  /**
+   * Optional message from user during registration
+   */
+  message?: string | null;
+  /**
+   * Auto-generated password sent to user upon approval
+   */
+  generatedPassword?: string | null;
+  /**
+   * Administrator who approved this user
+   */
+  approvedBy?: (number | null) | User;
+  /**
+   * Date and time of approval
+   */
+  approvedAt?: string | null;
+  /**
+   * Administrator who created this admin account
+   */
+  adminCreatedBy?: (number | null) | User;
   updatedAt: string;
   createdAt: string;
+  /**
+   * Must be unique across all users
+   */
   email: string;
   resetPasswordToken?: string | null;
   resetPasswordExpiration?: string | null;
@@ -131,6 +176,39 @@ export interface User {
   loginAttempts?: number | null;
   lockUntil?: string | null;
   password?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tenants".
+ */
+export interface Tenant {
+  id: number;
+  name: string;
+  /**
+   * This becomes subdomain.analytics.fintyhive.com
+   */
+  slug: string;
+  /**
+   * Password for tenant login
+   */
+  password: string;
+  /**
+   * The website URL to track
+   */
+  domain?: string | null;
+  status?: ('pending' | 'active' | 'suspended') | null;
+  /**
+   * Auto-generated when tenant is approved
+   */
+  umamiWebsiteId?: string | null;
+  settings?: {
+    /**
+     * Primary color for the tenant dashboard
+     */
+    brandColor?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -150,32 +228,6 @@ export interface Media {
   height?: number | null;
   focalX?: number | null;
   focalY?: number | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "tenants".
- */
-export interface Tenant {
-  id: number;
-  name: string;
-  /**
-   * This becomes subdomain.analytics.fintyhive.com
-   */
-  slug: string;
-  /**
-   * Auto-generated when tenant is created
-   */
-  umamiWebsiteId?: string | null;
-  /**
-   * e.g., analytics.clientdomain.com
-   */
-  domain?: string | null;
-  settings?: {
-    brandColor?: string | null;
-  };
-  status?: ('active' | 'suspended' | 'pending') | null;
-  updatedAt: string;
-  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -243,6 +295,16 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  firstName?: T;
+  lastName?: T;
+  role?: T;
+  tenant?: T;
+  status?: T;
+  message?: T;
+  generatedPassword?: T;
+  approvedBy?: T;
+  approvedAt?: T;
+  adminCreatedBy?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -278,14 +340,15 @@ export interface MediaSelect<T extends boolean = true> {
 export interface TenantsSelect<T extends boolean = true> {
   name?: T;
   slug?: T;
-  umamiWebsiteId?: T;
+  password?: T;
   domain?: T;
+  status?: T;
+  umamiWebsiteId?: T;
   settings?:
     | T
     | {
         brandColor?: T;
       };
-  status?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -2,13 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import * as jwt from "jsonwebtoken";
 
 // Database connection helper
-async function validateTenant(tenantSlug: string, websiteId: string) {
+async function validateTenant(tenantSlug: string, password: string) {
   try {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/api/tenants?where[slug][equals]=${tenantSlug}&limit=1`,
       {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${
+            process.env.PAYLOAD_API_KEY || process.env.PAYLOAD_SECRET
+          }`,
         },
       }
     );
@@ -22,8 +25,8 @@ async function validateTenant(tenantSlug: string, websiteId: string) {
     if (data.docs && data.docs.length > 0) {
       const tenant = data.docs[0];
 
-      // Check if website ID matches
-      if (tenant.umamiWebsiteId === websiteId) {
+      // Check if password matches (this should be hashed in production)
+      if (tenant.password === password) {
         return { valid: true, tenant };
       }
     }
@@ -38,22 +41,22 @@ async function validateTenant(tenantSlug: string, websiteId: string) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { tenantSlug, websiteId } = body;
+    const { tenantSlug, password } = body;
 
     // Validate input
-    if (!tenantSlug || !websiteId) {
+    if (!tenantSlug || !password) {
       return NextResponse.json(
-        { error: "Tenant slug and website ID are required" },
+        { error: "Tenant slug and password are required" },
         { status: 400 }
       );
     }
 
-    // Validate tenant and website ID
-    const { valid, tenant } = await validateTenant(tenantSlug, websiteId);
+    // Validate tenant and password
+    const { valid, tenant } = await validateTenant(tenantSlug, password);
 
     if (!valid || !tenant) {
       return NextResponse.json(
-        { error: "Invalid tenant or website ID" },
+        { error: "Invalid tenant or password" },
         { status: 401 }
       );
     }
