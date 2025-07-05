@@ -4,6 +4,9 @@ import * as jwt from "jsonwebtoken";
 // List of domains that should not be treated as tenants
 const EXCLUDED_SUBDOMAINS = ["www", "admin", "api", "mail", "ftp"];
 
+// Main domain configuration
+const MAIN_DOMAIN = "analytics.fintyhive.com";
+
 export function middleware(request: NextRequest) {
   const hostname = request.headers.get("host") || "";
   const pathname = request.nextUrl.pathname;
@@ -27,7 +30,7 @@ export function middleware(request: NextRequest) {
 
   // If no subdomain or excluded subdomain, continue without tenant header (root domain)
   if (!subdomain || EXCLUDED_SUBDOMAINS.includes(subdomain)) {
-    console.log("📄 No tenant context - showing login page");
+    console.log("📄 No tenant context - showing main app");
     return NextResponse.next();
   }
 
@@ -40,7 +43,7 @@ export function middleware(request: NextRequest) {
     console.log("❌ No auth token - redirecting to login");
     // No token - redirect to root domain (login page)
     const loginUrl = new URL("/", request.url);
-    loginUrl.hostname = hostname.replace(`${subdomain}.`, ""); // Remove subdomain
+    loginUrl.hostname = MAIN_DOMAIN; // Redirect to main domain
     return NextResponse.redirect(loginUrl);
   }
 
@@ -57,7 +60,7 @@ export function middleware(request: NextRequest) {
       console.log("❌ Token tenant mismatch - redirecting to login");
       // Token doesn't match subdomain - redirect to login
       const loginUrl = new URL("/", request.url);
-      loginUrl.hostname = hostname.replace(`${subdomain}.`, ""); // Remove subdomain
+      loginUrl.hostname = MAIN_DOMAIN; // Redirect to main domain
       return NextResponse.redirect(loginUrl);
     }
 
@@ -79,7 +82,7 @@ export function middleware(request: NextRequest) {
     console.log("❌ JWT verification failed - redirecting to login");
     // Invalid token - redirect to login
     const loginUrl = new URL("/", request.url);
-    loginUrl.hostname = hostname.replace(`${subdomain}.`, ""); // Remove subdomain
+    loginUrl.hostname = MAIN_DOMAIN; // Redirect to main domain
     return NextResponse.redirect(loginUrl);
   }
 }
@@ -103,7 +106,20 @@ function extractSubdomain(hostname: string): string | null {
     return null;
   }
 
-  // For production (subdomain.analytics.fintyhive.com)
+  // For production: check if this is the main domain
+  if (host === MAIN_DOMAIN) {
+    console.log("🔍 Main domain detected:", host);
+    return null; // No subdomain for main domain
+  }
+
+  // Check if this is a tenant subdomain (tenant.analytics.fintyhive.com)
+  if (host.endsWith(`.${MAIN_DOMAIN}`)) {
+    const subdomain = host.replace(`.${MAIN_DOMAIN}`, "");
+    console.log("🔍 Tenant subdomain detected:", subdomain);
+    return subdomain;
+  }
+
+  // For other domains, use the old logic as fallback
   if (parts.length >= 3) {
     return parts[0];
   }
