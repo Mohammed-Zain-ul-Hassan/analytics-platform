@@ -291,6 +291,18 @@ const Users: CollectionConfig = {
           console.log('📧 Sending approval email to:', doc.email)
 
           try {
+            // Activate the tenant when user is approved
+            if (doc.tenant) {
+              await req.payload.update({
+                collection: 'tenants',
+                id: doc.tenant,
+                data: {
+                  status: 'active',
+                },
+              })
+              console.log('🎯 Tenant activated for approved user:', doc.email)
+            }
+
             // Get tenant information
             let tenant = null
             if (doc.tenant) {
